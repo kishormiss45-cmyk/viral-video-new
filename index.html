@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Viral Video Pro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#0f0f0f;color:#fff;padding-bottom:80px}
+header{position:sticky;top:0;z-index:10;background:#0f0f0f;padding:12px;display:flex;gap:8px;align-items:center}
+header b{font-size:20px;color:#ff0050}
+header input{flex:1;background:#222;border:0;padding:10px 14px;border-radius:20px;color:#fff;outline:none}
+header button{background:#ff0050;border:0;color:#fff;padding:9px 14px;border-radius:20px;font-weight:700}
+.banner{margin:12px;border-radius:14px;overflow:hidden;background:#222;cursor:pointer}
+.banner img{width:100%;height:170px;object-fit:cover;display:block}
+.banner div{padding:10px}
+.banner h3{font-size:16px}
+.banner p{font-size:12px;color:#aaa;margin-top:4px}
+.cats{display:flex;gap:8px;overflow-x:auto;padding:0 12px 10px}
+.cats button{white-space:nowrap;background:#222;border:0;color:#fff;padding:8px 14px;border-radius:20px}
+.cats button.active{background:#ff0050}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 12px}
+.card{background:#1a1a1a;border-radius:12px;overflow:hidden;cursor:pointer}
+.card img{width:100%;height:150px;object-fit:cover;display:block}
+.card div{padding:8px}
+.card h4{font-size:13px;line-height:1.3;height:34px;overflow:hidden}
+.card p{font-size:11px;color:#aaa;margin-top:4px}
+.card span{font-size:11px;color:#ff0050}
+.empty{grid-column:1/3;text-align:center;color:#aaa;padding:40px 0}
+#detail{display:none;padding:12px}
+#detail img{width:100%;border-radius:12px;height:220px;object-fit:cover}
+#detail h2{margin:10px 0 5px;font-size:18px}
+#detail p{color:#aaa;font-size:13px}
+.btn{width:100%;padding:13px;border:0;border-radius:10px;font-weight:800;font-size:15px;margin-top:10px;cursor:pointer}
+.red{background:#ff0050;color:#fff}.green{background:#25D366;color:#fff}.dark{background:#222;color:#fff}.blue{background:#1877f2;color:#fff}
+.row{display:flex;gap:8px}.row button{flex:1}
+.task{background:#1a1a1a;padding:12px;border-radius:10px;margin-top:10px;display:flex;justify-content:space-between;align-items:center}
+.task small{color:#aaa}.task.done{border:1px solid #25D366}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:flex-end;z-index:99}
+.modal.open{display:flex}
+.box{background:#1a1a1a;width:100%;max-height:85vh;overflow:auto;padding:16px;border-radius:18px 18px 0 0}
+.box input,.box textarea,.box select{width:100%;background:#222;border:0;color:#fff;padding:12px;border-radius:8px;margin:8px 0;outline:none}
+.box h3{margin-bottom:6px}
+.close{float:right;background:#333;border:0;color:#fff;padding:6px 12px;border-radius:20px}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#111;display:flex;justify-content:space-around;padding:12px 0;border-top:1px solid #222;z-index:10}
+.nav button{background:none;border:0;color:#aaa;font-size:13px}.nav button.active{color:#ff0050;font-weight:700}
+.lock{background:#2a1500;border:1px solid #ff9800;padding:12px;border-radius:10px;margin-top:12px;text-align:center}
+.lock b{color:#ff9800}
+</style>
+</head>
+<body>
+
+<header><b>▶ Viral</b><input id="search" placeholder="Search video..." oninput="render()"><button onclick="openAdmin()">Admin</button></header>
+
+<div id="home">
+<div class="banner" id="bannerBox" onclick="openFirst()"><img id="bannerImg" src="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"><div><h3 id="bannerTitle">🔥 আজকের ভাইরাল ভিডিও</h3><p>দেখতে ক্লিক করো</p></div></div>
+<div class="cats" id="cats"></div>
+<div class="grid" id="grid"></div>
+</div>
+
+<div id="detail"></div>
+
+<div class="nav"><button class="active" onclick="goHome(this)">🏠 Home</button><button onclick="openTaskPage(this)">🎁 Task</button><button onclick="openAdmin()">⚙️ Admin</button><button onclick="shareApp()">🔗 Share</button></div>
+
+<!-- SHARE MODAL -->
+<div class="modal" id="shareModal"><div class="box"><button class="close" onclick="closeModal('shareModal')">X</button><h3>🔗 Share App</h3><p style="color:#aaa;font-size:13px">শেয়ার করো, বন্ধুরা দেখুক</p><button class="btn green" onclick="shareWhatsApp()">WhatsApp এ শেয়ার</button><button class="btn blue" onclick="shareFB()">Facebook এ শেয়ার</button><button class="btn dark" onclick="copyLink()">লিংক কপি করো</button></div></div>
+
+<!-- TASK MODAL -->
+<div class="modal" id="taskModal"><div class="box"><button class="close" onclick="closeModal('taskModal')">X</button><h3>🎁 Task Complete করো</h3><p id="taskInfo" style="color:#aaa;font-size:13px"></p><div id="taskList"></div><button class="btn red" id="unlockBtn" onclick="tryUnlock()">🔓 Unlock Video</button></div></div>
+
+<!-- ADMIN MODAL -->
+<div class="modal" id="adminModal"><div class="box"><button class="close" onclick="closeModal('adminModal')">X</button><h3>⚙️ Admin Panel</h3><div id="loginBox"><input id="adminPass" type="password" placeholder="Password দাও (1455)"><button class="btn red" onclick="login()">Login</button></div><div id="adminBox" style="display:none"><input id="vTitle" placeholder="ভিডিও টাইটেল"><input id="vLink" placeholder="YouTube / Drive লিংক"><select id="vCat"><option>ভাইরাল</option><option>ফানি</option><option>নাটক</option><option>ভূতের</option><option>খেলা</option><option>নিউজ</option></select><select id="vType"><option value="direct">Direct - সাথে সাথে চলবে</option><option value="unlock">Unlock - Task করে দেখতে হবে</option></select><textarea id="vDesc" placeholder="Description"></textarea><input id="vOfficial" placeholder="Official Link (YouTube/Drive) - খালি রাখলে লিংকটাই যাবে"><button class="btn red" onclick="uploadVideo()">+ ভিডিও আপলোড করো</button><h3 style="margin-top:16px">সব ভিডিও</h3><div id="manageList"></div></div></div></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyC0kELvMCCYVGkZW0HFC6tLwyzw9lUFgrI",
+  authDomain: "viral-video-pro.firebaseapp.com",
+  projectId: "viral-video-pro",
+  storageBucket: "viral-video-pro.firebasestorage.app",
+  messagingSenderId: "788850688430",
+  appId: "1:788850688430:web:df354daba886828478c83f",
+  measurementId: "G-LTKKWMSJSC"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let videos = [];
+let activeCat = "সব";
+let currentId = null;
+let tasksDone = JSON.parse(localStorage.getItem("tasksDone")||"{}");
+let likes = JSON.parse(localStorage.getItem("likes")||"{}");
+const CATS = ["সব","ভাইরাল","ফানি","নাটক","ভূতের","খেলা","নিউজ"];
+const ADMIN_PASS = "1455";
+
+db.collection("videos").orderBy("createdAt","desc").onSnapshot(snap=>{
+  videos=[];
+  snap.forEach(doc=>{let v=doc.data(); v._id=doc.id; videos.push(v);});
+  render(); renderManage();
+});
+
+function getId(link){
+  if(!link) return "";
+  let m = link.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if(m) return "yt:"+m[1];
+  m = link.match(/\/d\/([a-zA-Z0-9_-]+)/) || link.match(/id=([a-zA-Z0-9_-]+)/);
+  if(m) return "drive:"+m[1];
+  return "link:"+link;
+}
+function thumb(v){
+  let id = getId(v.link);
+  if(id.startsWith("yt:")) return "https://i.ytimg.com/vi/"+id.slice(3)+"/hqdefault.jpg";
+  if(id.startsWith("drive:")) return "https://drive.google.com/thumbnail?id="+id.slice(6)+"&sz=w600";
+  return "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg";
+}
+function watchLink(v){
+  let id = getId(v.link);
+  if(id.startsWith("yt:")) return "https://www.youtube.com/watch?v="+id.slice(3);
+  if(id.startsWith("drive:")) return "https://drive.google.com/file/d/"+id.slice(6)+"/view";
+  return v.link;
+}
+function renderCats(){
+  document.getElementById("cats").innerHTML = CATS.map(c=>`<button class="${c===activeCat?'active':''}" onclick="setCat('${c}')">${c}</button>`).join("");
+}
+function setCat(c){ activeCat=c; renderCats(); render(); }
+function render(){
+  renderCats();
+  let q = document.getElementById("search").value.toLowerCase();
+  let list = videos.filter(v => (activeCat==="সব" || v.cat===activeCat) && v.title.toLowerCase().includes(q));
+  if(videos.length>0){
+    document.getElementById("bannerImg").src = thumb(videos[0]);
+    document.getElementById("bannerTitle").innerText = "🔥 "+videos[0].title;
+  }
+  let g = document.getElementById("grid");
+  if(list.length===0){ g.innerHTML = `<div class="empty">কোনো ভিডিও পাওয়া যায়নি 😔<br><small>Admin থেকে ভিডিও আপলোড করো</small></div>`; return; }
+  g.innerHTML = list.map((v,i)=>{
+    let idx = videos.indexOf(v);
+    return `<div class="card" onclick="openVideo(${idx})"><img src="${thumb(v)}"><div><h4>${v.title}</h4><p>${v.cat} • ${v.views||0} views</p><span>${v.type==="unlock" ? "🔒 Unlock করে দেখো" : "▶ Watch Now"}</span></div></div>`;
+  }).join("");
+}
+function openFirst(){ if(videos.length>0) openVideo(0); }
+function goHome(btn){
+  document.getElementById("home").style.display="block";
+  document.getElementById("detail").style.display="none";
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+}
+function openVideo(i){
+  currentId=i; let v=videos[i];
+  v.views=(v.views||0)+1;
+  db.collection("videos").doc(v._id).update({views:v.views});
+  document.getElementById("home").style.display="none";
+  let d=document.getElementById("detail"); d.style.display="block";
+  let isLocked = v.type==="unlock" && !localStorage.getItem("unlocked_"+v._id);
+  let likeCount = (likes[v._id]||0) + (v.likes||0);
+  d.innerHTML = `
+    <button class="close" onclick="goHome()">← Back</button><br><br>
+    <img src="${thumb(v)}">
+    <h2>${v.title}</h2><p>${v.cat} • ${v.views} views • ${likeCount} likes</p>
+    <p style="margin-top:8px">${v.desc||""}</p>
+    <div class="row"><button class="btn dark" onclick="toggleLike()">❤️ Like (${likeCount})</button><button class="btn dark" onclick="shareVideo()">🔗 Share</button></div>
+    ${isLocked ? `<div class="lock"><b>🔒 Locked Video</b><p style="color:#fff;font-size:13px;margin:6px 0">এই ভিডিও দেখতে ৩টা ছোট Task করতে হবে</p><button class="btn red" onclick="openTask()">🎁 Task Complete করে Unlock করো</button></div>` : `<button class="btn red" onclick="watchFull()">▶ এখনই ভিডিও দেখো</button><button class="btn green" onclick="openOfficial()">🔗 Official Link এ যাও</button>`}
+    <button class="btn dark" onclick="goHome()">🏠 আরো ভিডিও দেখো</button>
+  `;
+  window.scrollTo(0,0);
+}
+function toggleLike(){
+  let v=videos[currentId];
+  likes[v._id]=(likes[v._id]||0)+1;
+  localStorage.setItem("likes",JSON.stringify(likes));
+  openVideo(currentId);
+}
+function watchFull(){ window.open(watchLink(videos[currentId]), "_blank"); }
+function openOfficial(){
+  let v=videos[currentId];
+  window.open(v.official||v.link, "_blank");
+}
+function shareVideo(){
+  let v=videos[currentId];
+  let url = location.href.split("#")[0];
+  let text = "🔥 "+v.title+" - এই ভিডিওটা দেখো: "+url;
+  if(navigator.share){ navigator.share({title:v.title, text:text, url:url}); } else { navigator.clipboard.writeText(text); alert("লিংক কপি হয়ে গেছে!"); }
+}
+function shareApp(){
+  let text = "🔥 Viral Video Pro - সেরা ভাইরাল ভিডিও দেখো: "+location.href;
+  if(navigator.share){ navigator.share({text:text, url:location.href}); } else { navigator.clipboard.writeText(text); alert("লিংক কপি হয়ে গেছে!"); }
+}
+function shareWhatsApp(){ window.open("https://wa.me/?text="+encodeURIComponent("🔥 Viral Video Pro দেখো: "+location.href),"_blank"); }
+function shareFB(){ window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(location.href),"_blank"); }
+function copyLink(){ navigator.clipboard.writeText(location.href); alert("লিংক কপি হয়ে গেছে!"); }
+function closeModal(id){ document.getElementById(id).classList.remove("open"); }
+function openTask(){
+  let v=videos[currentId];
+  document.getElementById("taskInfo").innerText = "ভিডিও: "+v.title+" - নিচের ৩টা Task করো";
+  renderTasks();
+  document.getElementById("taskModal").classList.add("open");
+}
+function openTaskPage(btn){
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+  if(videos.length===0){ alert("এখনো কোনো ভিডিও নেই"); return; }
+  currentId=0; openTask();
+}
+const TASKS=[
+  {id:"t1", title:"📺 YouTube Subscribe", desc:"আমাদের চ্যানেল Subscribe করো"},
+  {id:"t2", title:"👍 ভিডিওতে Like দাও", desc:"Official ভিডিওতে Like দাও"},
+  {id:"t3", title:"🔗 ১ জনকে শেয়ার করো", desc:"WhatsApp এ ১ জনকে শেয়ার করো"}
+];
+function renderTasks(){
+  let v=videos[currentId];
+  let key="unlocked_"+v._id;
+  document.getElementById("taskList").innerHTML = TASKS.map(t=>{
+    let done = (tasksDone[v._id]||[]).includes(t.id);
+    return `<div class="task ${done?'done':''}"><div><b>${t.title}</b><br><small>${t.desc}</small></div><button class="btn ${done?'green':'dark'}" style="width:auto;padding:8px 14px;margin:0" onclick="doTask('${t.id}')">${done?'✅ Done':'করো'}</button></div>`;
+  }).join("");
+}
+function doTask(tid){
+  let v=videos[currentId];
+  if(!tasksDone[v._id]) tasksDone[v._id]=[];
+  if(tid==="t1") window.open("https://www.youtube.com/@viralvideopro","_blank");
+  if(tid==="t2") window.open(watchLink(v),"_blank");
+  if(tid==="t3") window.open("https://wa.me/?text="+encodeURIComponent("ভিডিও দেখো: "+location.href),"_blank");
+  if(!tasksDone[v._id].includes(tid)) tasksDone[v._id].push(tid);
+  localStorage.setItem("tasksDone",JSON.stringify(tasksDone));
+  renderTasks();
+}
+function tryUnlock(){
+  let v=videos[currentId];
+  let done = tasksDone[v._id]||[];
+  if(done.length>=3){
+    localStorage.setItem("unlocked_"+v._id,"1");
+    closeModal("taskModal");
+    alert("✅ Unlock হয়ে গেছে! এখন ভিডিও দেখতে পারবা");
+    openVideo(currentId);
+  } else { alert("আগে ৩টা Task শেষ করো! বাকি: "+(3-done.length)+"টা"); }
+}
+function openAdmin(){
+  document.getElementById("adminModal").classList.add("open");
+}
+function login(){
+  if(document.getElementById("adminPass").value===ADMIN_PASS){
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("adminBox").style.display="block";
+    renderManage();
+  } else alert("ভুল Password! (1455)");
+}
+function uploadVideo(){
+  let title=document.getElementById("vTitle").value.trim();
+  let link=document.getElementById("vLink").value.trim();
+  if(!title||!link){ alert("Title আর Link দাও"); return; }
+  let newVideo={
+    title:title, link:link,
+    cat:document.getElementById("vCat").value,
+    type:document.getElementById("vType").value,
+    desc:document.getElementById("vDesc").value,
+    official:document.getElementById("vOfficial").value || link,
+    views:0, likes:0, createdAt:Date.now()
+  };
+  db.collection("videos").add(newVideo).then(()=>{
+    alert("✅ ভিডিও আপলোড হয়ে গেছে! এখন সবাই দেখতে পারবে");
+    document.getElementById("vTitle").value=""; document.getElementById("vLink").value=""; document.getElementById("vDesc").value=""; document.getElementById("vOfficial").value="";
+    closeModal("adminModal");
+  }).catch(e=>alert("Error: "+e.message));
+}
+function renderManage(){
+  let el=document.getElementById("manageList");
+  if(!el) return;
+  if(videos.length===0){ el.innerHTML="<p style='color:#aaa'>কোনো ভিডিও নেই</p>"; return; }
+  el.innerHTML = videos.map((v,i)=>`<div class="task"><div><b>${v.title}</b><br><small>${v.cat} • ${v.type}</small></div><button class="btn red" style="width:auto;padding:8px 14px;margin:0" onclick="delVideo(${i})">Delete</button></div>`).join("");
+}
+function delVideo(i){
+  if(!confirm("ডিলিট করবা?")) return;
+  db.collection("videos").doc(videos[i]._id).delete();
+}
+render();
+</script>
+</body>
+</html>
